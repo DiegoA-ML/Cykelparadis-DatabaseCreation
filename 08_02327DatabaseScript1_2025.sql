@@ -1,0 +1,303 @@
+-- DATABASE TABLE CREATION
+
+DROP DATABASE IF EXISTS DB;
+CREATE DATABASE IF NOT EXISTS DB;
+
+USE DB;
+
+CREATE TABLE IF NOT EXISTS Manufacturer (
+	CVR		VARCHAR(10) NOT NULL,
+    name	VARCHAR(255),
+    PRIMARY KEY(CVR)
+);
+
+CREATE TABLE IF NOT EXISTS Bikes (
+	bikeCode	VARCHAR(10) NOT NULL,
+    type	    VARCHAR(255),
+    speed		INT,
+    weight		FLOAT,
+    diameter	INT,
+    CVR			VARCHAR(10) NOT NULL,
+    PRIMARY KEY (bikeCode),
+    FOREIGN KEY(CVR) REFERENCES Manufacturer(CVR)
+);
+
+CREATE TABLE IF NOT EXISTS Parts (
+	partCode		VARCHAR(10) NOT NULL,
+    unitPrice	INT,
+    description VARCHAR(255),
+    CVR			VARCHAR(10) NOT NULL,
+    PRIMARY KEY(partCode),
+    FOREIGN KEY(CVR) REFERENCES Manufacturer(CVR)
+);
+
+CREATE TABLE IF NOT EXISTS Compatibility (
+	bikeCode   VARCHAR(10) NOT NULL,
+    partCode   VARCHAR(10) NOT NULL,
+    PRIMARY KEY (bikeCode, partCode),
+    FOREIGN KEY (bikeCode) REFERENCES Bikes(bikeCode),
+    FOREIGN KEY (partCode) REFERENCES Parts(partCode)
+);
+
+CREATE TABLE IF NOT EXISTS Customer (
+	CPR		   VARCHAR(11) NOT NULL,
+    email	   VARCHAR(255),
+    PRIMARY KEY(CPR)
+);
+
+CREATE TABLE IF NOT EXISTS RepairJob (
+	CPR		   VARCHAR(11) NOT NULL,
+    bikeCode   VARCHAR(10) NOT NULL,
+    startDate  DATE NOT NULL,
+    endDate	   DATE NOT NULL,
+    PRIMARY KEY(CPR, bikeCode, startDate, endDate),
+	FOREIGN KEY (CPR) REFERENCES Customer(CPR) ON DELETE CASCADE,
+    FOREIGN KEY (bikeCode) REFERENCES Bikes(bikeCode)
+);
+
+CREATE TABLE IF NOT EXISTS RepairParts (
+	CPR		   VARCHAR(11) NOT NULL,
+    bikeCode   VARCHAR(10) NOT NULL,
+    startDate  DATE NOT NULL,
+    endDate	   DATE NOT NULL,
+    partCode   VARCHAR(10) NOT NULL, 
+	quantity   INT NOT NULL,
+    PRIMARY KEY(CPR, bikeCode, startDate, endDate, partCode),
+	FOREIGN KEY (CPR, bikeCode, startDate, endDate)
+        REFERENCES RepairJob(CPR, bikeCode, startDate, endDate)
+        ON DELETE CASCADE,
+    FOREIGN KEY (partCode) REFERENCES Parts(partCode)
+);
+
+CREATE TABLE IF NOT EXISTS FullName (
+	CPR 	  VARCHAR(11) NOT NULL,
+    firstName VARCHAR(255),
+    lastName  VARCHAR(255),
+    PRIMARY KEY (CPR),
+    FOREIGN KEY (CPR) REFERENCES Customer(CPR) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS PhoneNumber (
+	CPR		    VARCHAR(11) NOT NULL,
+    phoneNumber VARCHAR(16),
+	PRIMARY KEY (CPR, phoneNumber),
+    FOREIGN KEY (CPR) REFERENCES Customer(CPR) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Zip (
+	zipCode		VARCHAR(20),
+	country		VARCHAR(255),
+    city		VARCHAR(255),
+    
+    PRIMARY KEY (zipCode, country)
+);
+
+CREATE TABLE IF NOT EXISTS Address (
+	CPR			VARCHAR(11) NOT NULL,
+    street		VARCHAR(40),
+    civicNumber VARCHAR(20),
+    zipCode		VARCHAR(20) NOT NULL,
+    country 	VARCHAR(255) NOT NULL,
+
+    PRIMARY KEY (CPR),
+    FOREIGN KEY (CPR) REFERENCES Customer(CPR) ON DELETE CASCADE,
+    FOREIGN KEY (zipCode, country) REFERENCES Zip(zipCode, country)
+);
+
+-- DATABASE POPULATION
+
+
+INSERT INTO Manufacturer (CVR, name)
+VALUES 
+('8972948729', 'Adler'),
+('4839201823', 'Centurion'),
+('5910283746', 'Opel'),
+('7192038475', 'Yamaha'),
+('6748291048', 'Bickerton'),
+('8201937465', 'Nagasawa'),
+('9384729102', 'Pegas'),
+('3849205738', 'Serotta'),	
+('5839201820', 'Tunturi'),
+('4829103847', 'Wanderer');
+
+
+
+INSERT INTO Bikes (bikeCode, type, speed, diameter, weight, CVR)
+VALUES
+('B001', 'Road', 22, 28, 8.5, '8972948729'),
+('B002', 'Mountain', 18, 27, 13.2, '4839201823'),
+('B003', 'Hybrid', 24, 28, 11.0, '5910283746'),
+('B004', 'Electric', 10, 29, 23.5, '7192038475'),
+('B005', 'Road', 20, 27, 8.9, '6748291048'),
+('B006', 'Touring', 21, 28, 14.4, '8201937465'),
+('B007', 'BMX', 1, 20, 10.1, '9384729102'),
+('B008', 'Touring', 1, 27, 14.8, '3849205738'),
+('B009', 'Electric', 14, 26, 22.7, '5839201820'),
+('B010', 'Mountain', 7, 28, 13.8, '4829103847');
+
+
+INSERT INTO Parts (partCode, unitPrice, description, CVR)
+VALUES
+('P011', 50, 'Better Light', '4829103847'),
+('P001', 250, 'Wheel', '8972948729'),
+('P002', 5, 'Screw', '4839201823'),
+('P003', 220, 'Seat', '5910283746'),
+('P004', 120, 'Chain Set', '7192038475'),
+('P005', 80, 'Tire', '6748291048'),
+('P006', 85, 'Pedal Set', '8201937465'),
+('P007', 350, 'Gear', '9384729102'),
+('P008', 450, 'Suspension For Mountainbikes', '5839201820'),
+('P009', 55, 'Bottle Holder', '4829103847'),
+('P010', 40, 'Light', '3849205738');
+
+
+
+INSERT INTO Compatibility (bikeCode, partCode)
+VALUES
+('B001', 'P001'),
+('B001', 'P004'),
+('B002', 'P002'),
+('B002', 'P003'),
+('B003', 'P005'),
+('B004', 'P010'),
+('B005', 'P007'),
+('B006', 'P004'),
+('B007', 'P006'),
+('B008', 'P009'),
+('B009', 'P008'),
+('B010', 'P005'),
+('B003', 'P009'),
+('B004', 'P001'),
+('B006', 'P007');
+
+
+
+INSERT INTO Customer (CPR, email)
+VALUES
+('010192-1234', 'maria@gmail.com'),
+('120385-5678', 'jonas@gmail.com'),
+('200493-3344', 'kasper@gmail.com'),
+('050577-9911', 'nico@gmail.com'),
+('141089-2288', 'mariana@gmail.com'),
+('250695-6622', 'alberte@gmail.com'),
+('071199-5566', 'toke@gmail.com'),
+('180202-8899', 'Shah@gmail.com'),
+('291092-3344', 'elias@gmail.com'),
+('060903-6677', 'aoling@gmail.com');
+
+
+
+INSERT INTO FullName (CPR, firstName, lastName)
+VALUES
+('010192-1234', 'Maria', 'Andersen'),
+('120385-5678', 'Jonas', 'Berg'),
+('200493-3344', 'Kasper', 'Christensen'),
+('050577-9911', 'Nico', 'Laursen'),
+('141089-2288', 'Mariana', 'Santos'),
+('250695-6622', 'Alberte', 'Skov'),
+('071199-5566', 'Toke', 'Hansen'),
+('180202-8899', 'Shah', 'Behsh'),
+('291092-3344', 'Elias', 'Parker'),
+('060903-6677', 'Ao', 'Ling');
+
+
+INSERT INTO PhoneNumber (CPR, phoneNumber)
+VALUES
+('010192-1234', '+4511122233'),
+('120385-5678', '+4522233344'),
+('200493-3344', '+4533344455'),
+('050577-9911', '+4544455566'),
+('141089-2288', '+4555566677'),
+('250695-6622', '+4566677788'),
+('071199-5566', '+4577788899'),
+('180202-8899', '+4588899900'),
+('291092-3344', '+4599900011'),
+('060903-6677', '+4510101112');
+
+INSERT INTO Zip (zipCode, country, city)
+VALUES
+('8000', 'Denmark', 'Aarhus'),
+('2100', 'Denmark', 'København'),
+('5000', 'Denmark', 'Odense'),
+('9000', 'Denmark', 'Aalborg'),
+('6700', 'Denmark', 'Esbjerg'),
+('8700', 'Denmark', 'Horsens'),
+('7100', 'Denmark', 'Vejle'),
+('4000', 'Denmark', 'Roskilde'),
+('8600', 'Denmark', 'Silkeborg'),
+('8900', 'Denmark', 'Randers');
+
+INSERT INTO Address (CPR, street, civicNumber, zipCode, country)
+VALUES
+('010192-1234', 'Viborgvej', '86', '8000', 'Denmark'),
+('120385-5678', 'Birkemosevej', '45B', '2100', 'Denmark'),
+('200493-3344', 'Ahornvej', '7', '5000', 'Denmark'),
+('050577-9911', 'Egevej', '19', '9000', 'Denmark'),
+('141089-2288', 'Fyrrevej', '88C', '6700', 'Denmark'),
+('250695-6622', 'Pilevej', '21', '8700', 'Denmark'),
+('071199-5566', 'Lindevej', '5', '7100', 'Denmark'),
+('180202-8899', 'Kristtornvej', '3B', '4000', 'Denmark'),
+('291092-3344', 'Kastanievej', '10', '8600', 'Denmark'),
+('060903-6677', 'Bøgevej', '14', '8900', 'Denmark');
+
+INSERT INTO RepairJob (CPR, bikeCode, startDate, endDate)
+VALUES
+('010192-1234', 'B001', '2024-01-10', '2025-01-12'),
+('010192-1234', 'B001', '2025-01-10', '2025-01-12'),
+('120385-5678', 'B002', '2025-02-05', '2025-02-07'),
+('120385-5678', 'B002', '2026-02-05', '2026-02-07'),
+('120385-5678', 'B002', '2027-02-05', '2027-02-07'),
+('200493-3344', 'B003', '2025-03-12', '2025-03-14'),
+('050577-9911', 'B005', '2025-04-02', '2025-04-04'),
+('141089-2288', 'B004', '2024-05-11', '2025-05-13'),
+('250695-6622', 'B007', '2025-06-07', '2025-06-09'),
+('071199-5566', 'B008', '2025-07-15', '2025-07-17'),
+('180202-8899', 'B009', '2025-08-10', '2025-08-12'),
+('291092-3344', 'B010', '2025-09-03', '2025-09-05'),
+('060903-6677', 'B006', '2025-10-01', '2025-10-03');
+
+
+INSERT INTO RepairParts (CPR, bikeCode, startDate, endDate, partCode, quantity)
+VALUES
+('010192-1234', 'B001', '2024-01-10', '2025-01-12', 'P001', 1),
+('010192-1234', 'B001', '2024-01-10', '2025-01-12', 'P004', 1),
+('120385-5678', 'B002', '2025-02-05', '2025-02-07', 'P002', 4),
+('120385-5678', 'B002', '2025-02-05', '2025-02-07', 'P003', 1),
+('200493-3344', 'B003', '2025-03-12', '2025-03-14', 'P005', 2),
+('200493-3344', 'B003', '2025-03-12', '2025-03-14', 'P009', 1),
+('050577-9911', 'B005', '2025-04-02', '2025-04-04', 'P007', 2),
+('050577-9911', 'B005', '2025-04-02', '2025-04-04', 'P005', 2),
+('141089-2288', 'B004', '2024-05-11', '2025-05-13', 'P010', 1),
+('141089-2288', 'B004', '2024-05-11', '2025-05-13', 'P001', 1),
+('250695-6622', 'B007', '2025-06-07', '2025-06-09', 'P006', 2),
+('071199-5566', 'B008', '2025-07-15', '2025-07-17', 'P009', 1),
+('180202-8899', 'B009', '2025-08-10', '2025-08-12', 'P008', 1),
+('291092-3344', 'B010', '2025-09-03', '2025-09-05', 'P005', 2),
+('060903-6677', 'B006', '2025-10-01', '2025-10-03', 'P004', 1),
+('060903-6677', 'B006', '2025-10-01', '2025-10-03', 'P007', 1);
+
+
+-- VIEWS
+
+CREATE VIEW mostRepairedBike AS (
+	SELECT bikeCode, COUNT(*) AS tot
+    FROM RepairJob
+    GROUP BY bikeCode
+);
+
+CREATE VIEW mostRepairPerType AS (
+	SELECT b.type, MAX(m.tot) AS maxTot
+    FROM RepairJob r JOIN mostRepairedBike m 
+		ON r.bikeCode = m.bikeCode JOIN Bikes b 
+        ON b.bikeCode = r.bikeCode
+	GROUP BY b.type
+);
+
+CREATE VIEW rankBikes AS (
+	SELECT b.type, b.bikeCode, b.CVR, ROW_NUMBER() OVER(PARTITION BY b.type ORDER BY b.bikeCode ASC) AS rnk
+    FROM mostRepairedBike m JOIN Bikes b 
+		ON m.bikeCode = b.bikeCode JOIN mostRepairPerType mr
+        ON mr.type = b.type
+	WHERE m.tot = mr.maxTot
+);
+
